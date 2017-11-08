@@ -1,0 +1,239 @@
+please first visit to previous documents first to learn it
+
+
+
+
+
+
+Unlike java we dont have premitive datatype ....ie.. in scala we directly use Int , Short,Double but during execution these datatypes work as premetives as their background code is hidden. All datatypes in scala are of object type
+
+
+Object Oriented course of java
+_________________________________
+
+Class constructor
+In scala entire body of a class is a constructor
+
+
+scala>  class animal{
+     | println("It is animal class")
+     | if(math.random*100<50)
+     | println("I got random number less than 50")
+     | else println("I got number above 50")
+     | }
+defined class animal
+
+scala> val a=new animal()
+It is animal class
+I got number above 50
+a: animal = animal@396a51ab
+
+scala> val a=new animal
+It is animal class
+I got number above 50
+a: animal = animal@42d80b78
+
+Creating val constructor a of class animal . constructor ignores the variable and methods ...and only 
+
+
+class test(name: String,value: Int){
+     | println(name)
+     | val bool=value>5
+     | }
+defined class test
+
+
+val a=new test("shubham",6)
+shubham
+a: test = test@1b7cc17c
+
+scala> a.bool
+res1: Boolean = true
+
+
+
+--------
+
+scala> class Fraction(numerator: Int ,denominator: Int){
+     | println("the numerator is "+numerator)
+     | println("denominator is "+denominator)
+     | println("Fraction: "+numerator+"/"+denominator+". Decimal:"+(numerator/denominator).toDecimal)
+     | }
+defined class Fraction
+
+scala> val a=new Fraction(12,4)
+the numerator is 12
+denominator is 4
+Fraction: 12/4. Decimal:3
+a: Fraction = Fraction@10d59286
+
+
+
+---------------------
+Create Function or Method in scala
+
+
+scala> def ADD(a: Int,b: Int):Int={
+     | a+b
+     | }
+ADD: (a: Int, b: Int)Int
+
+scala> ADD(15,27)
+res2: Int = 42
+
+
+scala> def ADD(a: Int,b: Int):Int={
+     |println(a)
+     | a+b
+     | }
+ADD: (a: Int, b: Int)Int
+
+scala> ADD(15,27)
+15
+res2: Int = 42
+
+
+scala> def ADD(a: Int,b: Int)={a+b}
+ADD: (a: Int, b: Int)Int
+
+scala> ADD(4,8)
+res7: Int = 12
+
+
+
+
+In scala def keyword is used to create a method
+there is no return statement in scala so it would return whatever result is provided is provided on the last statement in body of function
+In scala there is no void....so you must provide a return type like 
+:Int 
+
+
+Parameterized Constructors in scala
+_____________________________________
+
+
+class Test(name: String,age: Int){
+def this(name:String)=this(name,19)
+
+def this()=this("Shubham",21)
+
+println("Values are "+name+" "+age);
+}
+
+ 
+here 
+def this(param1,param2.....)   is a constructor
+first line of constructor should call to class constructor 
+this("Shubham",21)
+
+
+-------------------------------------
+require() is a predefined condition to be met 
+
+
+
+scala> class test(check: Int){
+     | require(check>10,"Value is less...pls enter greater than value")
+     | }
+defined class test
+
+scala> val a=new test(5)
+java.lang.IllegalArgumentException: requirement failed: Value is less...pls enter greater than value
+  at scala.Predef$.require(Predef.scala:219)
+  ... 34 elided
+
+
+
+
+
+`-------------------
+brackets and . can be omitted in scala
+
+scala> "Shubham".charAt(1)
+res8: Char = h
+
+scala> "Shubham" charAt 1
+res9: Char = h
+
+scala> "Shubham".length
+res10: Int = 7
+
+scala> "Shubham" length
+warning: there was one feature warning; re-run with -feature for details
+res11: Int = 7
+
+--------------------
+Equality
+in scala "==" is like .equals() in java
+
+
+scala> 1==2
+res12: Boolean = false
+
+scala> "Shubham"=="shubham"
+res13: Boolean = false
+
+scala> "xx"=="xx"
+res14: Boolean = true
+
+scala> "xx".equals("xx")
+res15: Boolean = true
+
+Same way != is nothing but !equals()
+
+-----
+To check equility of refferences ..eq is used
+(pointers to same object)
+neq is negation of eq that works with null
+
+scala> val a=new String("abc")
+a: String = abc
+
+scala> val b="abc"
+b: String = abc
+
+scala> a eq b
+res16: Boolean = false
+
+
+-----------------------------
+import
+
+import java.io.File
+
+instead of '*' ...in scala '_' is used
+
+
+-----------------------------------
+Singleton Objects
+
+It is like a class with all static methods
+in scala there is no static keyword....all the static members and methods will go inside singelton obejct instead
+
+
+scala> object test{
+     | def sayhello(name:String)=println("hello "+name)
+     | }
+defined object test
+warning: previously defined class test is not a companion to object test.
+Companions must be defined together; you may wish to use :paste mode for this.
+
+scala> test.sayhello("Shubham")
+hello Shubham
+
+
+scala> object helloworld{
+     | def main(args: Array[String])
+     | {
+     | println("helloworld")
+     | }
+     | }
+
+
+scala> helloworld.main(Array(" "))
+helloworld
+
+scala> helloworld.main(Array(" ","ssa","sdsa"))
+helloworld
+
+
