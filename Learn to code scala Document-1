@@ -124,6 +124,8 @@ public class Test implements scala.Product,scala.Serializable {
 
 Here public int i() and public int j() are setters while i_$eq are getters
 
+In val there will be no setter because they are immutable
+
 
 2. Regular class- Helper functions are not created
 
@@ -139,7 +141,7 @@ public class c {
   public c(int);
 }
 
-
+// no setter is created
 
 ---------------If else in scala------------
 
@@ -178,5 +180,3 @@ isBlue: String = blue
 
 scala> print(isBlue)
 blue
-
---------------------------
