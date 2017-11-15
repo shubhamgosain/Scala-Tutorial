@@ -1,0 +1,205 @@
+How to override a method
+For eg 
+override toString() method is done like
+
+override def toString(): String={
+	//What you want to print 
+ }
+
+
+
+
+
+
+
+Open a new scala project and add following line in build.sbt along with version name and scalaVersion
+
+libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.36"
+
+
+val driver ="com.mysql.jdbc.Driver"
+val url = "jdbc:mysql://localhost:3306/cca175"
+val username = "root"
+val password = "Qwerty@321"
+
+Class.forName(driver)
+val connection = DriverManager.getConnection(url, username, password)
+      
+
+
+
+----CODE-----
+
+
+import java.sql.DriverManager
+import java.sql.Connection
+
+case class Patientt(patient_id : Int,gender: String)
+{
+  override def toString(): String={
+    "patient id is = "+patient_id+" and gender is ="+gender+" Note:"+getInfo(patient_id);
+  }
+  
+def getInfo(patient_id: Int):String={
+  if(patient_id==2) 
+    "PAtient 2 is here"
+  else "Its not the patient 2"
+  }
+}
+object CommisionAmount {
+  def main(args: Array[String]):Unit={
+   
+     val driver ="com.mysql.jdbc.Driver"
+    val url = "jdbc:mysql://localhost:3306/cca175"
+    val username = "root"
+    val password = "Qwerty@321"
+
+    try {
+      Class.forName(driver)
+      val connection = DriverManager.getConnection(url, username, password)
+      println("Connection Eshtablished")
+      val statement = connection.createStatement()
+      val resultSet = statement.executeQuery("SELECT patient_id, gender FROM Patient")
+      while ( resultSet.next() ) {
+        val a=Patientt(resultSet.getInt("patient_id"),resultSet.getString("gender") )
+        println(a)              //Apply() function OF CASE CLASS Patientt
+        
+      }
+      connection.close()
+    
+    } catch {
+      case e => e.printStackTrace
+    }
+    
+  }
+}
+
+
+
+
+
+
+
+
+OUTPUT
+Connection Eshtablished
+patient id is = 2 and gender is =Female Note:PAtient 2 is here
+patient id is = 3 and gender is =Male Note:Its not the patient 2
+patient id is = 4 and gender is =Female Note:Its not the patient 2
+patient id is = 5 and gender is =Male Note:Its not the patient 2
+
+
+
+
+
+
+
+
+----------------------------------------------------------
+Externalize the parameter
+
+Why to use externalize parameters
+Because as a programmer number of arguements at run time should be minimum and we should try to pass the connection credentials as parameters so the code itself take the required credentials depending upon enviorment.
+
+For eg
+For Mysql database A1...credentials will be different
+For Mysql database A2...credentials will be different
+And for Oracle...credentials will be different
+
+As solution to this we externalize the parameters
+ 
+
+------
+
+Process :--
+
+1. Search for type safe config and add sbt dependency for it
+Add this line in build.sbt
+libraryDependencies += "com.typesafe" % "config" % "1.3.1"
+
+2. Create a new file in src/main/resources with name application.properties
+
+you can also use application.json but in that case we need to provide the resources in json format
+
+
+in file add resources 
+
+dev.host=localhost
+dev.port=3306
+dev.db=cca175
+dev.user=root
+dev.pw=Qwerty@321	
+
+and save it
+
+
+Now in program use this way to invoke connection variable
+
+
+val props=ConfigFactory.load()
+ val host=props.getConfig(args(0)).getString("host")
+     val port=props.getConfig(args(0)).getString("port")
+     val username = props.getConfig(args(0)).getString("user")
+     val password = props.getConfig(args(0)).getString("pw")
+    
+     val url = "jdbc:mysql://"+host+":"+port+"/cca175"
+    
+
+
+
+
+---------CODE---------
+import java.sql.DriverManager
+import java.sql.Connection
+import sun.misc.ObjectInputFilter.Config
+import com.typesafe.config.ConfigFactory
+
+case class Patientt(patient_id : Int,gender: String)
+{
+  override def toString(): String={
+    "patient id is = "+patient_id+" and gender is ="+gender+" Note:"+getInfo(patient_id);
+  }
+  
+def getInfo(patient_id: Int):String={
+  if(patient_id==2) 
+    "PAtient 2 is here"
+  else "Its not the patient 2 "
+  }
+}
+object CommisionAmount {
+  def main(args: Array[String]):Unit={
+   
+    val props=ConfigFactory.load()
+     val driver ="com.mysql.jdbc.Driver"
+     
+     val host=props.getConfig(args(0)).getString("host")
+     val port=props.getConfig(args(0)).getString("port")
+     val username = props.getConfig(args(0)).getString("user")
+     val password = props.getConfig(args(0)).getString("pw")
+    
+     val url = "jdbc:mysql://"+host+":"+port+"/cca175"
+    try {
+      Class.forName(driver)
+      val connection = DriverManager.getConnection(url,username,password)
+      println("Connection Eshtablished")
+      val statement = connection.createStatement()
+      val resultSet = statement.executeQuery("SELECT patient_id, gender FROM Patient")
+      while ( resultSet.next() ) {
+        val a=Patientt(resultSet.getInt("patient_id"),resultSet.getString("gender") )
+        println(a)
+        
+      }
+      connection.close()
+    
+    } catch {
+      case e => e.printStackTrace
+    }
+     
+  }
+}
+
+
+
+
+
+**Before running you need to give the arguement name in configurations of program ...i.e.. dev
