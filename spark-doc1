@@ -88,3 +88,21 @@ scala> sc.parallelize((1 to 1000).toList).
 
 ***Collect function is used to convert RDD object to base object ....i.e.. converting "even" to scala List
 even.collect()
+
+
+
+
+Now download the databases from 
+REfer to my git document for it
+git clone https://github.com/dgadiraju/data.git
+
+
+Now add one of the file to spark
+--------------------------------
+
+val orders = sc.textFile("C:\\Program Files\\Git\\MyGitFilesDirectory\\data\\retail_db\\orders\\part-00000")
+orders.count()
+orders.first()
+
+
+
