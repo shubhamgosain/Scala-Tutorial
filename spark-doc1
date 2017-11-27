@@ -1,0 +1,90 @@
+Download Cloudera quick start Vm and start it
+
+
+spark-shell to run scala on local mode
+
+pyspark to run in python mode local mode
+
+spark-shell --master yarn             //It will start spark in distributed mode----there will be one master node
+
+*We should not use local mode in PRODUCTION(we should use yarn)........for development purpose we can use LOCAL
+Standalone mode is between (completely running on local) and (completely running on Production)
+
+spark-sql    // you be able to access hive tables and data and run queries of hive 
+
+
+
+
+--------------------------
+In Spark-shell --master yarn type
+
+sc
+
+if it does not gives info like 
+org.apache.spark.Spa....... etc
+
+it means your sever is not created and without it you would not be able to do anything
+*So first step is to check weather server is running or not
+----
+
+sqlContext
+
+It is used to show hive queries	 
+
+Eg..
+sqlContext.sql("create database fromsparkshell")
+val databases=sqlContext.sql("show databases")
+
+databses.show()
+
+--ouput--
+
+default
+fromsparkshell
+
+
+
+
+--------------------------------------
+To set the spark environment
+go to wlabs in sbt
+
+and 
+sbt console
+
+scala> import org.apache.spark.SparkConf
+
+scala> import org.apache.spark.SparkContext
+
+scala> val conf=new org.apache.spark.SparkConf().setAppName("Testing").setMaster("local")
+
+scala> val sc=new SparkContext(conf)
+
+to create a list in spark
+
+val r=sc.parallelize((1 to 1000).toList)
+
+val even=r.filter(x => x%2==0)
+
+even.count
+
+
+#here "r" and "even" are type of RDD....RDD is Risilient Ditributed Dataset of spark
+
+To get the sum of all the elements in spark RDD we use reduce or fold(there is no sum in spark)
+
+
+even.reduce((agg,value) => agg+value)
+
+
+OR Direcly you can do 
+
+scala> sc.parallelize((1 to 1000).toList).
+	|filter(_ % 2==0).
+	|reduce(_ + _)
+
+
+
+
+***Collect function is used to convert RDD object to base object ....i.e.. converting "even" to scala List
+even.collect()
