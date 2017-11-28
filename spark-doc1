@@ -1,3 +1,5 @@
+
+
 Download Cloudera quick start Vm and start it
 
 
@@ -35,7 +37,7 @@ Eg..
 sqlContext.sql("create database fromsparkshell")
 val databases=sqlContext.sql("show databases")
 
-databses.show()
+databases.show()
 
 --ouput--
 
@@ -88,6 +90,10 @@ scala> sc.parallelize((1 to 1000).toList).
 
 ***Collect function is used to convert RDD object to base object ....i.e.. converting "even" to scala List
 even.collect()
+Collect will convert anything in RDD to a collection...use only to preview for small data
+In actual projects where we are dealing with huge amount of data , DONT USE COLLECT to preview data because it convert RDD to collection which will be single threaded which will be copied to one node only and thus destroys the availablity of data in a multinode enviorment.
+DONT USE COLLECT
+ALWAYS USE TAKE
 
 
 
@@ -96,13 +102,63 @@ Now download the databases from
 REfer to my git document for it
 git clone https://github.com/dgadiraju/data.git
 
-
+---------------------------------
+-----------------------------------
+---------------------------------
+------------------------------
 Now add one of the file to spark
 --------------------------------
 
 val orders = sc.textFile("C:\\Program Files\\Git\\MyGitFilesDirectory\\data\\retail_db\\orders\\part-00000")
 orders.count()
+
 orders.first()
+	res4: String = 1,2013-07-25 00:00:00.0,11599,CLOSED
+
+
+--------------------
+
+## Now we will do transformation to data ....we need data in format of status adn get count of it so would convert it to a tuple having (Status,value) ..(here it is 1)where value is given by us used in counting no of different status.
+
+scala> val orderMap=orders.map(rec => {
+     | (rec.split(',')(3),1)
+     | })
+	
+orderMap: org.apache.spark.rdd.RDD[(String, Int)] = MapPartitionsRDD[2] at map at <console>:12
 
 
 
+----To count the no of different status-----
+
+scala> val orderStatusCount= orderMap.reduceByKey((agg,value) => agg + value)
+orderStatusCount: org.apache.spark.rdd.RDD[(String, Int)] = ShuffledRDD[3] at reduceByKey at <console>:13
+
+scala> orderStatusCount.collect().foreach(println)
+
+(PENDING_PAYMENT,15030)
+(CANCELED,1428)
+(CLOSED,7556)
+(PAYMENT_REVIEW,729)
+(PENDING,7610)
+(ON_HOLD,3798)
+(PROCESSING,8275)
+(SUSPECTED_FRAUD,1558)
+(COMPLETE,22899)
+
+
+
+###############So th complete program will be#####################
+scala> sc.textFile("C:\\Program Files\\Git\\MyGitFilesDirectory\\data\\retail_db\\orders\\part-00000").
+     | map(rec => {(rec.split(',')(3),1)}).
+     | reduceByKey((agg,value) => agg+value).
+     | collect().foreach(println)
+
+
+
+
+you can also write reduce by key in this way just like reduce
+scala> sc.textFile("C:\\Program Files\\Git\\MyGitFilesDirectory\\data\\retail_db\\orders\\part-00000").
+     | map(rec => {(rec.split(',')(3),1)}).
+     | reduceByKey(_+_).
+     | collect().
+     | foreach(println)
