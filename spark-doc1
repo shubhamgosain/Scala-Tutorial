@@ -85,7 +85,7 @@ scala> sc.parallelize((1 to 1000).toList).
 	|filter(_ % 2==0).
 	|reduce(_ + _)
 
-
+To create an RDD use parallelize or textfile
 
 
 ***Collect function is used to convert RDD object to base object ....i.e.. converting "even" to scala List
@@ -162,3 +162,56 @@ scala> sc.textFile("C:\\Program Files\\Git\\MyGitFilesDirectory\\data\\retail_db
      | reduceByKey(_+_).
      | collect().
      | foreach(println)
+
+
+
+
+
+------------------------------------------
+FLAT MAP vs MAP
+MAP selects the whole element while FlatMap can work irrespective of element(focus only on data)
+In case of MAP..for each input there will be exactly one output
+eg..
+scala> list l=("hello my","friend I am your","best friend")
+
+scala> val s=sc.parallelize(l)
+s: org.apache.spark.rdd.RDD[String] = ParallelCollectionRDD[30] at parallelize at <console>:12
+
+val c=s.map(rec=>rec.split(" "))
+c: org.apache.spark.rdd.RDD[Array[String]] = MapPartitionsRDD[31] at map at <console>:13
+
+scala> c.collect()
+res25: Array[Array[String]] = Array(Array(hello, my), Array(friend, I, am, your), Array(best, friend))
+
+-----------------------------------------------------------
+
+scala> val c=s.flatMap(rec=>rec.split(" "))
+c: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[32] at flatMap at <console>:13
+
+scala> c.collect()
+res27: Array[String] = Array(hello, my, friend, I, am, your, best, friend)
+
+
+
+
+
+
+--------Wordcount Program-----
+
+scala> sc.textFile("E:\\STUDY\\CCA175\\spark\\wordcount.txt").
+     | flatMap(x=>{x.toLowerCase.split(' ')}).
+     | map(rec=>(rec,1)).
+     | reduceByKey(_+_).
+     | collect().foreach(println)
+
+
+here flat map is used to split and convert to tolowercase
+
+
+You can minimize the code and write 
+scala> sc.textFile("E:\\STUDY\\CCA175\\spark\\wordcount.txt").
+     | flatMap(_.toLowerCase.split(' ')).
+     | map((_, 1)).
+     | reduceByKey(_+_).
+     | collect().foreach(println)
+
