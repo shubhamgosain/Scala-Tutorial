@@ -1,0 +1,190 @@
+---------Word count program------
+
+
+1.Open a new project with name wc having sbt version 0.13.13 and scala version 2.10.6
+
+2. open  build.sbt in this new project and add library dependency of spark 1.6.2 2.10
+
+libraryDependencies += "org.apache.spark" % "spark-core_2.10" % "1.6.2"
+
+
+3. CREATE A NEW scala object under src/main/scala with any name you want to write wordcount program
+
+4. write the code
+
+
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+object Wordcount {
+
+  def main(args: Array[String]): Unit =
+{
+  val conf=new SparkConf().
+    setMaster("local").
+    setAppName("word count")
+
+  val sc=new SparkContext(conf)
+
+  val randomtext=sc.textFile(args(0))
+
+  randomtext.flatMap(_.toLowerCase.split(' ')).
+    map(rec => (rec, 1)).
+    reduceByKey((agg, value) => (agg + value)).
+    saveAsTextFile(args(1))
+
+}
+}
+
+
+you need to edit application run configuration and provide input-output path as program arguements
+
+
+
+
+output
+(lethe,,1)
+(stones,,3)
+(companion,1)
+(silence,,4)
+(comment,2)
+(absolutely,9)
+(young,40)
+(off-hand,,1)
+
+----------------------------------
+----------------------------------
+----------------------------------
+* here data is stored in the forms of tuples...ie..(String,Int)
+
+Q- Store data in type String with TAB separated data 
+Ans --
+
+use map
+.map(rec=>(rec.productIterator.mkString("\t")) before printing or saving the data
+
+It will convert tuple to String with intoducing a TAB in between
+
+output
+marked	9
+nostril	1
+setting	2
+years	11
+jugular	1
+awful	11
+lawn	2
+
+
+
+
+---------------------------------------
+---------------------------------------
+---------------------------------------
+---------------------------------------
+
+Now we need to create the jar file of this project so that we can run it over our spark cluster
+
+To create jar file
+
+open cmd 
+cd to project location
+in wc directory type "sbt package"
+
+It will create jar file in your wc/target/scala-2.10
+
+
+
+
+**********************************************************************************************************
+*******************To process individual records only map,flatmap and filter can be used******************
+
+
+
+
+Move the jar file to cloudera Vm from host
+rsync -avPh -e "ssh -p 20022" wc_2.10-0.1.jar cloudera@localhost:~/Gosain
+
+Add your wordcount text file as input to your Cluster HDFS directory using put command
+----
+First create a new directory       hadoop fs -mkdir Gosain/WordCount
+Move file to HDFS 		   hadoop fs -put localfilepath  HDFSlocation
+----
+
+
+
+
+Now run spark-submit command to run spark job(refer to link for more https://spark.apache.org/docs/1.6.0/quick-start.html)
+
+
+spark-submit --class Wordcount --conf spark.ui.port=22222 Gosain/wc_2.10-0.1.jar Gosain/WordCount/wordcount.txt Gosain/WordCount/wcoutput
+
+
+------Explanation--------
+1.  in --class give the class name of your program which is Wordcount
+2.  --conf use to provide configurations values which is used for providing port number for spark(We can remove it in case of cloudera as 
+3.  Gosain/wc_2.10-0.1.jar is the VM jar location 
+4.  Gosain/WordCount/wordcount.txt AND Gosain/WordCount/wcoutput is the cluster HDFS location for input and ouput. There are      program arguements.
+
+you can checkyour task in spark history server
+
+
+
+
+---------------------------------
+--------------------------------
+--------------------------------
+--------------------------------
+Provding type safe to code so that we can call program in both localmode and yarn mode as per requirement by providing same in arguements
+
+create a application.properties file in src/main/resources and add lines to it
+
+dev.executionMode = local
+prod.executionMode= yarn-client
+
+
+
+Edit the code as
+----
+
+import com.typesafe.config.ConfigFactory
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+object Wordcount {
+
+  def main(args: Array[String]): Unit =
+{
+
+val props=ConfigFactory.load()
+
+
+  val conf=new SparkConf().
+    setMaster(props.getConfig(args(2)).getString("executionMode")).
+    setAppName("word count")
+  val sc=new SparkContext(conf)
+
+  val randomtext=sc.textFile(args(0))
+
+  randomtext.flatMap(_.toLowerCase.split(' ')).
+    map(rec => (rec, 1)).
+    reduceByKey((agg, value) => (agg + value)).
+    map(_.productIterator.mkString("\t")).
+    saveAsTextFile(args(1))
+
+  print("Successfull")
+}
+}
+
+
+
+
+
+now you can run this in yarn mode by moving this jar to cluster and doing same steps
+now the spark sumbit command will be
+
+spark-submit --class Wordcount --master yarn Gosain/wc_2.10-0.1.jar /user/cloudera/Gosain/WordCount/wordcount.txt /user/cloudera/Gosain/WordCount/wcoutput prod
+
+
+
+
+
+
+__________________________spark conf file in cloudera is -----/etc/spark/conf/   look for .conf file ...YOU CAN ADD YOUR CONFIGURATIONS
