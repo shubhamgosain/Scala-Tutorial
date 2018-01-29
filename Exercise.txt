@@ -1,0 +1,79 @@
+val months=List("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+
+def topNShares(rec: (Int, Iterable[String]), topN: Int): Iterable[(String,(String,Double))]={
+rec._2.toList.sortBy(k => -k.split(",")(6).toDouble).
+take(topN).
+map(r => (months(rec._1),(r.split(",")(0),r.split(",")(6).toDouble)))
+}
+
+
+dataGroupByMonth.flatMap(rec => {
+      topNShares(rec,3)
+      }).
+      collect().foreach(println)
+
+
+
+
+
+
+
+
+
+
+
+
+import com.typesafe.config.ConfigFactory
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.hadoop.fs._
+
+object TopSharesPerMonth {
+  val months=List("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+
+  def topNShares(rec: (Int, Iterable[String]), topN: Int): Iterable[(String,(String,Double))]={
+    rec._2.toList.sortBy(k => -k.split(",")(6).toDouble).
+      take(topN).
+      map(r => (months(rec._1),(r.split(",")(0),r.split(",")(6).toDouble)))
+  }
+
+def main(args: Array[String]): Unit={
+
+  val props=ConfigFactory.load()
+  val conf=new SparkConf().setAppName("nyse").setMaster(props.getConfig(args(1)).getString("executionMode"))
+  val sc =new SparkContext(conf)
+
+  val inputHDFSdir=args(0)
+  val outputHDFSdir=args(0)+"\\output\\top3sharesByMonth"
+
+  val fs = FileSystem.get(sc.hadoopConfiguration)
+  if(!fs.exists(new Path(inputHDFSdir)))
+    {
+      print("Input Directory Does not exists")
+      return
+    }
+  
+  if(fs.exists(new Path(outputHDFSdir)))
+  {
+    fs.delete(new Path(outputHDFSdir),true)
+  }
+
+
+
+  val data=sc.textFile(inputHDFSdir+"\\nyse_2013.csv")
+
+  val dataMap=data.map(rec => {
+    val r =rec.split(",")
+    val m = months.indexOf(r(1).split("-")(1))
+    (m,rec)
+  })
+
+  val dataGroupByMonth=dataMap.groupByKey()
+
+  val top3Shares = dataGroupByMonth.flatMap(rec => {
+    topNShares(rec,3)
+  })
+
+  top3Shares.saveAsTextFile(outputHDFSdir)
+
+}
+}

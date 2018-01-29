@@ -1,4 +1,4 @@
----------Word count program------
+ ---------Word count program------
 
 
 1.Open a new project with name wc having sbt version 0.13.13 and scala version 2.10.6
