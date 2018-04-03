@@ -1,0 +1,145 @@
+Persist
+
+Persist moves the file to memory
+
+by default sc also moves the file to in memory (when converted to RDD using textfile)
+but using persist you can change the setting as you like (like memory or memory and disk)
+
+persistence is done in workers node
+
+For more persist operation go to  
+
+
+
+
+eg.     val products = sc.textFile("///")
+
+import org.apache.spark.storage.StorageLevel
+
+products.persist(StorageLevel.MEMORY_AND_DISK)
+
+products.unpertist()
+
+
+
+**MEMORY_AND_DISK uses the disk storage if memory goes out of storage
+(Spark does not store anything in memory....for processing it takes the data to memory and after processing flushes it out )
+ie.. create a RDD .....process the data ......save it to HDFS
+
+
+(####Persist and Cache Both are same)
+
+
+---------------------------
+-------------------------
+-----------------------
+Read from Sequence File
+
+
+Sequence file is in the format of key and value
+
+
+import org.apche.hadoop.io._
+
+products.map(rec => (rec.split(",")(2).toInt,rec)).saveAsSequenceFile("/user/cloudera/applications/products_saq")
+
+sc.sequenceFie("/user/dgadiraju/products_saq",classOf[IntWritable],classOf[Text]).
+map(rec => rec._2.toString()).
+collect().foreach(println)
+
+
+
+If we dont want a  key 
+we can
+
+
+products.map(rec => (NullWritable.get(),rec)).saveAsSequenceFile("/user/dgadiraju/products_saq")
+sc.sequenceFie("/user/dgadiraju/products_saq",classOf[NullWritable],classOf[Text]).
+map(rec => rec._2.toString()).
+collect().foreach(println)
+
+
+
+
+-----------
+To READ AND WRITE using other input formats or write format
+
+import org.apache.hadoop.io._
+import org.apache.hadoop.mapreduce.lib.output._
+
+val productsMap = products.map(rec => (new IntWritable(rec.split(",")(0).toInt),new Text(rec)))
+
+productsMap.saveAsNewAPIHadoopFile("/sds/sd/s/d/sd/sa" , classOf[IntWritable] , classOf[Text] , classOf[SequenceFileOutputFormat[IntWritable,Text]])
+
+
+It will save a RDD into HDFS ....hadoop file format
+
+
+
+
+
+Now to read this hadoop file
+
+import org.apache.hadoop.mapreduce.lib.input._
+sc.newAPIHadoopFile("sakdksa/asd/sa/sa/d/sa" , classOf[SequenceFileInputFormat[IntWritable,Text]] , classOf[IntWritable] , classOf[Text])
+
+
+
+Similarly following these steps we can use any other hadoop api format
+
+
+
+
+----------------------------
+------------------------
+----------------------------
+
+ACCUMULATORS
+
+
+
+*Problem
+
+Writing the custom count program
+var total = 0;
+products.map(rec => {
+    total+=1
+    (rec.split(",")(0),rec)
+}).collect().foreach(println)
+
+total
+0
+
+
+It is returning total value 0 while the answer should be 1340(the number of records in products)
+
+---
+The reason is when we use map , flatmap or any other rdd function or spark function........it executes on executor....ie in worker nodes
+
+The rest of the scala variables like var is executed in driver node....
+This is the reason that it is not able to make visible changes to Global variable total....Also it will not give error because it is programmily correct
+
+
+For this we use Accumalators
+Accumulators creates the variable inside SparkContext which is directly accesible be Executors
+
+Solution----
+
+val acc = sc.accumulator(0, "To count the number of products" )
+
+products.map(rec => {
+    acc+=1
+    (rec.split(",")(0),rec)
+}).collect().foreach(println)
+
+acc
+1340
+
+
+
+Challenges with accumulator
+
+It makes changes only when command is executed (not compliling)
+
+
+https://www.supergloo.com/fieldnotes/spark-broadcast-accumulator-examples-scala/
